@@ -1,0 +1,195 @@
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import apiService from '@/servise';
+
+// Reactive variables to store categories and modal state
+const categories = ref([]);
+const showModal = ref(false);
+const selectedCategory = ref({ id: null, name: '' });
+const error = ref(null);
+
+// Pagination variables
+const currentPage = ref(1);
+const rowsPerPage = 8;
+
+// API call to fetch categories
+const fetchCategories = async () => {
+  try {
+    const response = await apiService.getAllCategories();
+    categories.value = response.data;
+    console.log("Categories fetched successfully");
+  } catch (err) {
+    console.error('Failed to get categories:', err);
+  }
+};
+
+// Delete category function
+const deleteCategory = async (categoryId) => {
+  try {
+    await apiService.deleteCategory(categoryId);
+    categories.value = categories.value.filter(category => category.id !== categoryId);
+    console.log("Category deleted successfully");
+  } catch (err) {
+    console.error('Failed to delete category:', err);
+  }
+};
+
+// Select a category to edit
+const selectCategory = (category) => {
+  selectedCategory.value = {...category};
+  showModal.value = true;
+};
+
+// Update category function
+const updateCategory = async () => {
+  try {
+    await apiService.updateCategory(selectedCategory.value.id, selectedCategory.value);
+    fetchCategories();
+    showModal.value = false;
+  } catch (err) {
+    error.value = 'Failed to update category';
+    console.error('Failed to update category:', err);
+  }
+};
+
+// Computed property for total pages
+const totalPages = computed(() => Math.ceil(categories.value.length / rowsPerPage));
+
+// Computed property for paginated categories
+const paginatedCategories = computed(() => {
+  const startIndex = (currentPage.value - 1) * rowsPerPage;
+  return categories.value.slice(startIndex, startIndex + rowsPerPage);
+});
+
+// Pagination methods
+const goToPage = (page) => {
+  currentPage.value = page;
+};
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+};
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
+};
+
+// Fetch categories on component mount
+onMounted(fetchCategories);
+</script>
+
+<template>
+  <div class="container mx-auto pt-6">
+    <div class="items-center flex justify-between">
+      <button
+          class="bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-300 hover:bg-red-700 mb-6 logout-button">
+        Create Product
+      </button>
+    <div class="flex flex-end items-center">
+      <button
+          class="bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-300 hover:bg-blue-700 mb-6 logout-button">
+        Create Category
+      </button>
+    </div>
+    </div>
+
+    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+      <div class="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Product List</h2>
+      </div>
+      <table class="w-full text-lg text-center text-gray-500 dark:text-gray-400">
+        <thead class="text-md text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+        <tr>
+          <th scope="col" class="px-16 py-3">
+            <span class="sr-only">Image</span>
+          </th>
+          <th scope="col" class="px-6 py-3">Product</th>
+          <th scope="col" class="px-6 py-3">Qty</th>
+          <th scope="col" class="px-6 py-3">Price</th>
+          <th scope="col" class="px-6 py-3">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="category in paginatedCategories" :key="category.id"
+            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+          <td class="p-4">
+            <img src="../assets/download%20(1).jpg" class="w-24 md:w-48 max-w-full max-h-full" alt="Product Image">
+          </td>
+          <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">{{ category.name }}</td>
+          <td class="px-6 py-4">
+              <span
+                  class="inline-block bg-gray-50 border border-gray-300 text-gray-900 w-12 text-center py-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                1
+              </span>
+          </td>
+          <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">$599</td>
+          <td class="px-6 py-4">
+            <button @click="selectCategory(category)" class="text-green-600 font-medium hover:text-green-400">Edit
+            </button>
+            |
+            <button @click="deleteCategory(category.id)"
+                    class="text-red-600 font-medium hover:underline dark:text-red-500">Remove
+            </button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex space-x-2 justify-center mt-4">
+      <div class="flex justify-center text-gray-600">
+        <button @click="prevPage" :disabled="currentPage === 1" class="px-3 py-2 bg-white rounded-md hover:bg-gray-200">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <button v-for="page in totalPages" :key="page" @click="goToPage(page)"
+                :class="{ 'bg-gray-300': currentPage === page }"
+                class="px-3 py-2 bg-white rounded-md hover:bg-gray-200">{{ page }}
+        </button>
+        <button @click="nextPage" :disabled="currentPage === totalPages"
+                class="px-3 py-2 bg-white rounded-md hover:bg-gray-200">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal for Editing Category -->
+    <div v-if="showModal"
+         class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out">
+      <div
+          class="bg-white p-6 rounded-lg shadow-xl w-1/3 transform transition-transform duration-300 ease-in-out scale-105">
+        <h2 class="text-xl font-bold mb-4 text-primary1">Edit Category</h2>
+        <form @submit.prevent="updateCategory" method="post">
+          <label for="name" class="block text-base mb-2 text-black">Name</label>
+          <input v-model="selectedCategory.name" type="text" id="name"
+                 class="border w-full text-base px-3 py-2 rounded shadow focus:outline-none focus:ring-0 focus:border-primary1"
+                 placeholder="Name">
+          <div class="mt-16 flex justify-end items-center">
+            <button type="button" @click="showModal = false"
+                    class="bg-gray-500 border border-gray-400 rounded-full text-white font-bold px-4 py-2 mr-4 transition-all ease-in-out duration-300 hover:bg-gray-600 hover:shadow-lg">
+              Cancel
+            </button>
+            <button type="submit"
+                    class="bg-black border-gray-500 border-x-2 border-y-2 rounded-full text-white font-bold px-4 py-2 shadow-inner hover:border-gray-600 hover:shadow-md transition-all ease-in-out duration-300">
+              Update
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.container {
+  max-width: 1200px;
+}
+</style>
