@@ -13,7 +13,7 @@ const login = async (event) => {
 
   try {
     const response = await service.login({
-      username: email.value,
+      email: email.value,
       password: password.value,
     });
     await router.push('/products');

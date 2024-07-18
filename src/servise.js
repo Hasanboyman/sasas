@@ -18,7 +18,11 @@ export default {
         return apiClient.get('api/products/all');
     },
     createProduct(productData) {
-        return apiClient.post('api/products/create', productData);
+        return apiClient.post('api/products/create', productData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
     },
     updateProduct(productId, updatedData) {
         return apiClient.put(`api/products/update/${productId}`, updatedData);

@@ -5,12 +5,16 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import Login from './components/LoginComponent.vue'
 import Product from './components/ProductComponent.vue'
+import CreateCategory from "@/components/CreateCatigory.vue";
+import ProductCreate from "@/CreateProduct.vue";
 import Error from './ErrorComponent.vue'
 
 const routes = [
     { path: '/', component: Login, name: 'login' },
     { path: '/products', component: Product, name: 'products' },
-    { path: '/:pathMatch(.*)*', component: Error, name: 'Error 404' }
+    {path: '/createCategory', component: CreateCategory, name: 'createCategory' },
+    {path: '/createproduct', component: ProductCreate, name: 'createproduct' },
+    { path: '/:pathMatch(.*)*', component: Error, name: 'Error 404' },
 ]
 
 const router = createRouter({

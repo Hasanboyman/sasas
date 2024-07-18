@@ -1,18 +1,16 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import {ref, computed, onMounted} from 'vue';
 import apiService from '@/servise';
 
-// Reactive variables to store categories and modal state
+
+const products = ref([]);
 const categories = ref([]);
 const showModal = ref(false);
-const selectedCategory = ref({ id: null, name: '' });
+const selectedCategory = ref({id: null, name: ''});
 const error = ref(null);
-
-// Pagination variables
 const currentPage = ref(1);
 const rowsPerPage = 8;
 
-// API call to fetch categories
 const fetchCategories = async () => {
   try {
     const response = await apiService.getAllCategories();
@@ -23,7 +21,16 @@ const fetchCategories = async () => {
   }
 };
 
-// Delete category function
+const fetchProducts = async () => {
+  try {
+    const response = await apiService.getAllProducts();
+    products.value = response.data;
+    console.log("Products fetched successfully");
+  } catch (err) {
+    console.error('Failed to get products:', err);
+  }
+};
+
 const deleteCategory = async (categoryId) => {
   try {
     await apiService.deleteCategory(categoryId);
@@ -34,13 +41,11 @@ const deleteCategory = async (categoryId) => {
   }
 };
 
-// Select a category to edit
 const selectCategory = (category) => {
   selectedCategory.value = {...category};
   showModal.value = true;
 };
 
-// Update category function
 const updateCategory = async () => {
   try {
     await apiService.updateCategory(selectedCategory.value.id, selectedCategory.value);
@@ -53,12 +58,12 @@ const updateCategory = async () => {
 };
 
 // Computed property for total pages
-const totalPages = computed(() => Math.ceil(categories.value.length / rowsPerPage));
+const totalPages = computed(() => Math.ceil(products.value.length / rowsPerPage));
 
-// Computed property for paginated categories
-const paginatedCategories = computed(() => {
+// Computed property for paginated products
+const paginatedProducts = computed(() => {
   const startIndex = (currentPage.value - 1) * rowsPerPage;
-  return categories.value.slice(startIndex, startIndex + rowsPerPage);
+  return products.value.slice(startIndex, startIndex + rowsPerPage);
 });
 
 // Pagination methods
@@ -78,23 +83,26 @@ const nextPage = () => {
   }
 };
 
-// Fetch categories on component mount
-onMounted(fetchCategories);
+// Fetch categories and products on component mount
+onMounted(() => {
+  fetchCategories();
+  fetchProducts();
+});
 </script>
 
 <template>
   <div class="container mx-auto pt-6">
     <div class="items-center flex justify-between">
-      <button
+      <RouterLink to="/createproduct"
           class="bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-300 hover:bg-red-700 mb-6 logout-button">
         Create Product
-      </button>
-    <div class="flex flex-end items-center">
-      <button
-          class="bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-300 hover:bg-blue-700 mb-6 logout-button">
-        Create Category
-      </button>
-    </div>
+      </RouterLink>
+      <div class="flex flex-end items-center">
+        <RouterLink to="/createCategory"
+            class="bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-300 hover:bg-blue-700 mb-6 logout-button">
+          Create Category
+        </RouterLink>
+      </div>
     </div>
 
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -104,34 +112,40 @@ onMounted(fetchCategories);
       <table class="w-full text-lg text-center text-gray-500 dark:text-gray-400">
         <thead class="text-md text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
         <tr>
-          <th scope="col" class="px-16 py-3">
-            <span class="sr-only">Image</span>
-          </th>
+          <th scope="col" class="px-8 py-3">Id</th>
+          <th scope="col" class="px-12 py-3">Image</th>
           <th scope="col" class="px-6 py-3">Product</th>
-          <th scope="col" class="px-6 py-3">Qty</th>
+          <th scope="col" class="px-6 py-3">Category</th>
+          <th scope="col" class="px-6 py-3">Quantity</th>
           <th scope="col" class="px-6 py-3">Price</th>
           <th scope="col" class="px-6 py-3">Actions</th>
         </tr>
         </thead>
         <tbody>
-        <tr v-for="category in paginatedCategories" :key="category.id"
+        <tr v-for="product in paginatedProducts" :key="product.id"
             class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+          <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">{{ product.id }}</td>
           <td class="p-4">
-            <img src="../assets/download%20(1).jpg" class="w-24 md:w-48 max-w-full max-h-full" alt="Product Image">
+            <img :src="product.imageUrl" class="w-24 md:w-48 max-w-full max-h-full" alt="Product Image">
           </td>
-          <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">{{ category.name }}</td>
+          <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">
+            {{ product.name }}
+          </td>
+          <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">
+            {{ getCategoryName }}
+          </td>
           <td class="px-6 py-4">
               <span
                   class="inline-block bg-gray-50 border border-gray-300 text-gray-900 w-12 text-center py-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                1
+                {{ product.quantity }}
               </span>
           </td>
-          <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">$599</td>
+          <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">${{ product.price }}</td>
           <td class="px-6 py-4">
-            <button @click="selectCategory(category)" class="text-green-600 font-medium hover:text-green-400">Edit
+            <button @click="selectCategory(product)" class="text-green-600 font-medium hover:text-green-400">Edit
             </button>
             |
-            <button @click="deleteCategory(category.id)"
+            <button @click="deleteCategory(product.id)"
                     class="text-red-600 font-medium hover:underline dark:text-red-500">Remove
             </button>
           </td>
@@ -193,3 +207,4 @@ onMounted(fetchCategories);
   max-width: 1200px;
 }
 </style>
+
