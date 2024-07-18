@@ -1,9 +1,8 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import servise from "@/servise";
+import axios from "axios";
 
-const service = servise;
 const router = useRouter();
 const email = ref(null);
 const password = ref(null);
@@ -12,7 +11,7 @@ const login = async (event) => {
   event.preventDefault();
 
   try {
-    const response = await service.login({
+    const response = await axios.post("https://back-end-kde2.onrender.com/api-auth/login/", {
       email: email.value,
       password: password.value,
     });

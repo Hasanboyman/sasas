@@ -2,7 +2,7 @@
 import {ref, computed, onMounted} from 'vue';
 import apiService from '@/servise';
 
-
+// States
 const products = ref([]);
 const categories = ref([]);
 const showModal = ref(false);
@@ -11,6 +11,7 @@ const error = ref(null);
 const currentPage = ref(1);
 const rowsPerPage = 8;
 
+// Fetch categories
 const fetchCategories = async () => {
   try {
     const response = await apiService.getAllCategories();
@@ -21,6 +22,7 @@ const fetchCategories = async () => {
   }
 };
 
+// Fetch products
 const fetchProducts = async () => {
   try {
     const response = await apiService.getAllProducts();
@@ -31,6 +33,7 @@ const fetchProducts = async () => {
   }
 };
 
+// Delete category
 const deleteCategory = async (categoryId) => {
   try {
     await apiService.deleteCategory(categoryId);
@@ -41,11 +44,13 @@ const deleteCategory = async (categoryId) => {
   }
 };
 
+// Select category for editing
 const selectCategory = (category) => {
   selectedCategory.value = {...category};
   showModal.value = true;
 };
 
+// Update category
 const updateCategory = async () => {
   try {
     await apiService.updateCategory(selectedCategory.value.id, selectedCategory.value);
@@ -94,12 +99,12 @@ onMounted(() => {
   <div class="container mx-auto pt-6">
     <div class="items-center flex justify-between">
       <RouterLink to="/createproduct"
-          class="bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-300 hover:bg-red-700 mb-6 logout-button">
+                  class="bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-300 hover:bg-red-700 mb-6">
         Create Product
       </RouterLink>
       <div class="flex flex-end items-center">
         <RouterLink to="/createCategory"
-            class="bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-300 hover:bg-blue-700 mb-6 logout-button">
+                    class="bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-300 hover:bg-blue-700 mb-6">
           Create Category
         </RouterLink>
       </div>
@@ -128,17 +133,13 @@ onMounted(() => {
           <td class="p-4">
             <img :src="product.imageUrl" class="w-24 md:w-48 max-w-full max-h-full" alt="Product Image">
           </td>
-          <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">
-            {{ product.name }}
-          </td>
-          <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">
-            {{ getCategoryName }}
-          </td>
+          <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">{{ product.name }}</td>
+          <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">{{ product.category }}</td>
           <td class="px-6 py-4">
-              <span
-                  class="inline-block bg-gray-50 border border-gray-300 text-gray-900 w-12 text-center py-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                {{ product.quantity }}
-              </span>
+            <span
+                class="inline-block bg-gray-50 border border-gray-300 text-gray-900 w-12 text-center py-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">{{
+                product.quantity
+              }}</span>
           </td>
           <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">${{ product.price }}</td>
           <td class="px-6 py-4">
@@ -207,4 +208,3 @@ onMounted(() => {
   max-width: 1200px;
 }
 </style>
-
